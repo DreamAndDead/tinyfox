@@ -3,6 +3,7 @@
 #include <string.h>
 #include <pcap.h>
 #include <arpa/inet.h> // big little endian convert
+#include <openssl/md5.h> // md5 hash
 
 #include "EAP.h"
 #include "EAPOL.h"
@@ -11,6 +12,12 @@
 /* 长度不知道为什么是 1518 ?? */
 #define SNAP_LEN 1518
 #define MAX_PACKET 600 // 实际传输的 eap 之类的包没有超过过 600
+
+/* for debuf */
+#define debug printf
+void PrintPacket(u_char * packet) {
+	
+}
 
 /* 状态
  * 这里的状态是有区别的
@@ -32,9 +39,9 @@
 
 u_char State;
 
-char username[20];
-char password[20];
-u_char Id;
+char username[20] = "U201117735";
+char password[20] = "myself";
+u_char id;
 char md5_value[16];
 
 /* 广播数据包 MAC 01:d0:f8:00:00:03，源 MAC 本机 MAC
@@ -59,7 +66,7 @@ void response_md5(pcap_t *);
 void logoff(pcap_t *);
 
 void request_id();
-void request_md5(const struct eap_struct *);
+void request_md5();
 void success(const struct eap_struct *);
 void failure();
 
@@ -77,7 +84,7 @@ int main(int argc, char ** argv) {
 
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
-	int num_packets = 10; /* default 10 to capture */
+	int num_packets = -1; /* limitless */
 
 	dev = default_dev;
 	printf("device: %s, number of packets: %d, filter: %s \n",
@@ -133,7 +140,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 
 	// 开始认证是一个特殊的情况
 	if (State == START) {
-		start();
+		start(handle);
 		State = REQUEST_ID;
 		return;
 	}
@@ -141,7 +148,10 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 	/* 0x888e filter */
 	const struct ethernet_struct *ethe;
 	ethe = (struct ethernet_struct *)(packet);
-	if (ethe->ethe_type != 0x888e)
+
+	debug("ethe type: 0x%2x\n", ethe->ethe_type);
+	
+	if (ethe->ethe_type != 0x8e88)
 		return;
 
 	/* receive packet, parse, change state */
@@ -151,22 +161,22 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header,
 	eapol = (struct eapol_struct *)(packet);
 	eap = (struct eap_struct *)(&(eapol->eapol_packet_body));
 
+	debug("eap code: 0x%02x\n\n", eap->eap_code);
+	
 	switch (eap->eap_code) {
 	case CODE_REQUEST:
 		switch (eap->eap_type) {
-		case type_identify:
+		case TYPE_IDENTITY:
+			debug("request id....\n");
 			// request_id();
-			// 记录下来服务器 mac，与广播 mac 相区分
-			// Id 对应 
-			memcpy(dst_mac, eapol->mac_src, 6);
-			Id = eap->eap_identifier;
-			// response id
+			id = eap->eap_identifier;
+
 			response_id(handle);
 			break;
-		case type_md5_challenge:
+		case TYPE_MD5_CHALLENGE:
 			// request_md5();
-			// Id 对应
-			Id = eap->eap_identifier;
+			// id 对应
+			id = eap->eap_identifier;
 			// md5 值记录
 			// 路过一个长度字节
 			memcpy(md5_value, (u_char *)&(eap->eap_type_data) + 1, 16);
@@ -197,6 +207,7 @@ int ReadPacket(u_char *buffer, char *path) {
 		fprintf(stderr, "path: %s, can't read anything");
 		exit(1);
 	}
+	fclose(input);
 
 	return size;
 }
@@ -204,7 +215,7 @@ int ReadPacket(u_char *buffer, char *path) {
 void start(pcap_t *p) {
 	u_char packet[600];
 	int size;
-	size = ReadPacket(packet, "../packet/start.bin");
+	size = ReadPacket(packet, "../packets/start.bin");
 	
 	if (pcap_sendpacket(p, packet, size) == -1) { 
 		fprintf(stderr, "Couldn't send broad packet, error: %s",
@@ -213,56 +224,58 @@ void start(pcap_t *p) {
 	}
 }
 
-/*
- * 向服务器发送反馈包
- * 对应 Id
- * 发送自己的用户名
- *
- */
-
 void response_id(pcap_t * p) {
 	u_char packet[600];
 	int size;
-	size = ReadPacket(packet, "../packet/response_id.bin");
+	size = ReadPacket(packet, "../packets/response_id.bin");
+
+	debug("size: %d\n", size);
+
+	packet[0x13] = id;
 	
-	struct eapol_struct *response_id_packet = (struct eapol_struct *)(packet);
-
-	memcpy(response_id_packet->mac_dst, dst_mac, 6);
-	memcpy(response_id_packet->mac_src, local_mac, 6);
-
-	response_id_packet->ethe_type = eapol_eth_type;
-	response_id_packet->eapol_version = eapol_version;
-	response_id_packet->eapol_packet_type = EAP_PACKET;
-	// big little endian 转换
-	u_short len = strlen(username) + 5; // 5 代表着其它的字节长度
-	len = htons(len);
-	response_id_packet->eapol_packet_lenth = len;
-
-	struct eap_struct *eap_part = (struct eap_struct *) &(response_id_packet->eapol_packet_body);
-	eap_part->eap_code = CODE_RESPONSE;
-	eap_part->eap_identifier = Id; // 由服务器传来的 Id
-	eap_part->eap_lenth = len;
-	eap_part->eap_type = TYPE_IDENTITY;
-
-	memcpy((char *)&(eap_part->eap_type_data), username, strlen(username));
-	
-	// 553 的魔数源于，这是从抓包的实际数据中得到的大小 
-	if (pcap_sendpacket(p, packet, 553) == -1) { 
+	if (pcap_sendpacket(p, packet, size) == -1) { 
 		fprintf(stderr, "Couldn't send broad packet, error: %s",
 				pcap_geterr(p));
 		exit(EXIT_FAILURE);
 	}
 }
 
-// 对应 Id
-// 进行算法计算，加上自己的密码
-// md5 extra data --> 用户名
+// 算法： id + password + 16bit challenge bytes
+// md5 extra data : 用户名
 void response_md5(pcap_t * p) {
+	u_char packet[600];
+	int size;
+	size = ReadPacket(packet, "../packets/response_md5.bin");
+
+	packet[0x13] = id;
+
+	u_char result[16];
+	u_char data[32];
+	data[0] = id;
+	memcpy(data + 1, password, strlen(password));
+	memcpy(data + 1 + strlen(password), md5_value, 0x10);
+
+	MD5(data, 1 + strlen(password) + 0x10, result);
+
+	memcpy(packet + 0x18, result, 0x10);
 	
+	if (pcap_sendpacket(p, packet, size) == -1) { 
+		fprintf(stderr, "Couldn't send broad packet, error: %s",
+				pcap_geterr(p));
+		exit(EXIT_FAILURE);
+	}
 }
 
 void logoff(pcap_t * p) {
+	u_char packet[600];
+	int size;
+	size = ReadPacket(packet, "../packets/logoff.bin");
 	
+	if (pcap_sendpacket(p, packet, size) == -1) { 
+		fprintf(stderr, "Couldn't send broad packet, error: %s",
+				pcap_geterr(p));
+		exit(EXIT_FAILURE);
+	}
 }
 
 /*
@@ -275,14 +288,21 @@ void request_id(void) {
 	
 }
 
-void request_md5(const struct eap_struct * eap) {
+void request_md5(void) {
 	
 }
 
+/*
+ * 输出认证后消息
+ */
 void success(const struct eap_struct * eap) {
-	
+	printf("认证成功\n");
 }
 
+/*
+ * 失败要如何处理
+ */
 void failure(void) {
-	
+	fprintf(stderr, "认证失败....\n");
+	exit(EXIT_FAILURE);
 }
