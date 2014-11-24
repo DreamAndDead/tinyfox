@@ -1,5 +1,5 @@
 all:
-	gcc *.c -o a.out -Wall -lcrypto
+	gcc *.c -o a.out -Wall
 
 db:
 	gcc *.c -g -o a.out -Wall -lcrypto
