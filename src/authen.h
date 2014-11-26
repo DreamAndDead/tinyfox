@@ -7,14 +7,19 @@
 #define MAX_PACKET_LEN 600 // 实际传输的 eap 之类的包没有超过过 600
 #define EAPOL_ETH_TYPE 0x8e88 // 网络序为大端，本机序为小端
 
-char username[20];
-char password[20];
-u_char id;
-char md5_value[16];
+#include "EAP.h"
+#include "EAPOL.h"
 
-const u_char broad_mac[6] = { 0x01, 0xd0, 0xf8, 0x00, 0x00, 0x03 };
-u_char dst_mac[6];
-u_char local_mac[6];
+extern char username[20];
+extern char password[20];
+extern u_char id;
+extern char md5_value[16];
+
+extern char dev[20];
+
+extern const u_char broad_mac[6];
+extern u_char dst_mac[6];
+extern u_char local_mac[6];
 
 void GetMac(char *dev, u_char mac[6]);
 void ListDevs(void);

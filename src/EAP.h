@@ -5,12 +5,6 @@
  *
  */
 
-/*
- * u_char 8byte
- * u_short 16byte
- * u_int 32byte
- */
-
 #ifndef CNS_EAP_H_
 #define CNS_EAP_H_
 
