@@ -5,6 +5,12 @@ A hust campus network supplicant on linux, a substitute to RuiJie
 
 华科校园网认证客户端命令行工具，可替代锐捷，运行于linux
 
+## dependencies
+* libpacp -- for packets capture
+* libssh -- md5 examine
+* cmake -- building
+be sure that you have install the above before you run `cmake`
+
 ## install
 > 
 > git clone https://github.com/DreamAndDead/tinyfox.git
