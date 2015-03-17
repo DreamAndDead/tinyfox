@@ -31,11 +31,8 @@ be sure that you have install the above before you run `cmake`
 > $./tinyfox -h
 >
 
-## todo-list
-- 整洁代码
-- 主动下线
-- 显示认证成功消息
-- 自动获取 ip 地址
+## blog for it
+You can visit [How tinyfox works](http://dreamanddead.github.io/tinyfox/2015/03/17/how-tinyfox-works/) to know more of it
 
 ## license 
 [GPL](http://www.gnu.org/licenses/gpl.txt)
