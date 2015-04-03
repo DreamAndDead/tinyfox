@@ -3,8 +3,6 @@
 ## description
 A hust campus network supplicant on linux, a substitute to RuiJie
 
-华科校园网认证客户端命令行工具，可替代锐捷，运行于linux
-
 ## dependencies
 * libpacp -- for packets capture
 * libssh -- md5 examine
@@ -33,6 +31,9 @@ be sure that you have install the above before you run `cmake`
 
 ## blog for it
 You can visit [How tinyfox works](http://dreamanddead.github.io/tinyfox/2015/03/17/how-tinyfox-works/) to know more of it
+
+## attention
+it can't run normally now because the lack of a part of encrytion, I'm trying to fix it, good luck to me ;)
 
 ## license 
 [GPL](http://www.gnu.org/licenses/gpl.txt)
