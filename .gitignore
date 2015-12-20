@@ -1,9 +1,0 @@
-*.o
-a.out
-*~
-
-test/
-build/
-
-*.vim
-*.viminfo
