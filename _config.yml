@@ -8,7 +8,7 @@ relative_permalinks: false
 
 # Setup
 title:            Tinyfox
-tagline:          ''
+tagline:          'A hust campus network supplicant on linux'
 description:      'A hust campus network supplicant on linux'
 url:              https://dreamanddead.github.io
 baseurl:          /tinyfox
