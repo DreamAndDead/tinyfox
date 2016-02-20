@@ -29,19 +29,14 @@ be sure that you have install the above before you run `cmake`
 > $./tinyfox -h
 >
 
-## blog for it
-You can visit [How tinyfox works](http://dreamanddead.github.io/tinyfox/2015/03/17/how-tinyfox-works/) to know more of it
-
-## attention
-it can't run normally now because the lack of a part of encrytion, I'm trying to fix it, good luck to me ;)
+## site 
+You can visit [Here](http://dreamanddead.github.io/tinyfox/) to know more of it
 
 ## license 
 [GPL](http://www.gnu.org/licenses/gpl.txt)
 
 ## contact
-If you have any trouble with it, contact me.  favorofife@gmail.com 
-
-You can also follow it on my blog DreamAndDead.github.io
+If you have any trouble with it, open a issue or contact me.  favorofife@yeah.net
 
 Enjoy it :)
 
