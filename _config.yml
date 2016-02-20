@@ -11,7 +11,7 @@ title:            Tinyfox
 tagline:          ''
 description:      'A hust campus network supplicant on linux'
 url:              https://dreamanddead.github.io
-baseurl:          /
+baseurl:          /tinyfox
 
 author:
   name:           'DreamAndDead'
