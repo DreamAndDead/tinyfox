@@ -11,7 +11,7 @@ title: How Tinyfox Works
 802.1x是典型的Client/Server结构，包括三个实体
 
 
-![802.1x client server](/images/802.1x client server.png)
+![802.1x client server](/tinyfox/images/802.1x client server.png)
 客户端，设备端，认证服务器
 
 - 客户端可以理解为我们在PC上运行的软件如锐捷，发起认证
@@ -28,7 +28,7 @@ title: How Tinyfox Works
 然后就可以拿着刺探的情报图，来穿过这道阻隔我们连接网络的门了
 
 
-![802.1x flow](/images/802.1x flow.png)
+![802.1x flow](/tinyfox/images/802.1x flow.png)
 
 1. EAPOL-start 认证的开始由我们发起，这是一个目的MAC地址固定的广播报文，使设备端注意到我们
 2. EAP-Request/Identity 设备端注意到我们之后，让我们出示我们的上网帐号
@@ -269,12 +269,12 @@ EAP-Packet  -------> 2，3，6，7，10
 
 EAP协议被解读当且仅当EAPoL的包类型为EAP-Packet的时候，也只有在这时，EAPoL的Packet Body为一个完整的EAP协议包，方可用EAP协议来解读 
 
-![802.1x flow](/images/802.1x flow 2.png)
+![802.1x flow](/tinyfox/images/802.1x flow 2.png)
 
 下面我们从实际的数据包结合上面的协议进行分析（抓包分析工具使用的是wireshark）
 
 *1* EAPoL-Start
-![start](/images/start.png)
+![start](/tinyfox/images/start.png)
 我将不同的字段用不同的颜色加以区分，整体是一个在以太网传输的EAPoL协议的数据包，由于这是第一个，我们逐个字段来看
 
 01 d0 f8 00 00 03：目的Mac，这个地址很有意思，在EAPoL-Start中，这是一个定值，并不是我们要通信的设备端的地址，是在我们发出这个包之后，设备端根据我们的Mac，来主动联系我们
@@ -291,7 +291,7 @@ EAP协议被解读当且仅当EAPoL的包类型为EAP-Packet的时候，也只�
 可能有人问了后面不是还有那么多字节的信息吗，那些只是为了以太网下为了拼凑包的长度而添加的乱七八糟的值，对我们来说没有任何意义，下面还有很多情况是与之类似的
 
 *2* EAP-Request Identity
-![request id](/images/requestid.png)
+![request id](/tinyfox/images/requestid.png)
 
 这里我们再逐个分析下
 
@@ -326,7 +326,7 @@ EAP协议被解读当且仅当EAPoL的包类型为EAP-Packet的时候，也只�
 后面的其它字节就如同前面所说的一样是没有用的信息我们不用在意
 
 *3* EAP-Response Identity
-![response id](/images/responseid.png)
+![response id](/tinyfox/images/responseid.png)
 
 第一行与2的第一行分析相同 
 
@@ -349,7 +349,7 @@ EAP协议被解读当且仅当EAPoL的包类型为EAP-Packet的时候，也只�
 剩下的内容没有意义
 
 *4* EAP-Request MD5 challenge
-![request md5](/images/requestmd5.png)
+![request md5](/tinyfox/images/requestmd5.png)
 
 和前面的相同，不过原来的信息变化了而已，我们就从变化的那些地方来看
 
@@ -364,26 +364,26 @@ EAP协议被解读当且仅当EAPoL的包类型为EAP-Packet的时候，也只�
 94 4f d2 ........44 47 83：MD5 Value，后期我们即使用此数据包的Id，MD5 Value与我们的密码做MD5运算，得到一个16字节的值，返回回去，即下一个包的内容 
 
 *5* EAP-Response MD5 challenge
-![response md5](/images/responsemd5.png)
+![response md5](/tinyfox/images/responsemd5.png)
 
 与上一个包的分析很相同，不过这里EAP-Packet的长度为32字节
 
 我们可以看到后16+10字节是我们根据MD5运算后的Value+帐号
 
 *6* Succcess
-![success](/images/success.png)
+![success](/tinyfox/images/success.png)
 
 我们认证成功之后，服务器发来贺电
 
 这个包的长度有500字节，这里的冗余信息还是有用的，即学校给我们发来的小广告
 
 *7* EAPoL-Logoff
-![logoff](/images/logoff.png)
+![logoff](/tinyfox/images/logoff.png)
 
 第一行最后面的02所标识
 
 *8* Failure
-![failure](/images/failure.png)
+![failure](/tinyfox/images/failure.png)
 
 从EAP协议来分析，在长度为0x0a的数据包中，最后剩下的00 00 13 11 00 00还没有解读过是什么意思，起码前面的信息告诉我们，我们认证失败了
 
@@ -401,7 +401,7 @@ EAP协议被解读当且仅当EAPoL的包类型为EAP-Packet的时候，也只�
 3. 无线wifi hustwireless的认证，用EAPol的方法好像没有用
 
 3. 二次认证，其实我不清楚为什么需要两次，不过在自己从rj运行抓包的情况来看，实际是这样的（我先下线再上线的）
-![flow](/images/realsituation.png)
+![flow](/tinyfox/images/realsituation.png)
 确实有两次的认证，而且包的内容完全一样，而且如果细心的话，用dhcp做关键字来过滤，你会发现有DHCP Protocol（由wireshark来看）的数据包在两次认证之间
 
 真实的过程与自己所写的[tinyfox](https://github.com/DreamAndDead/tinyfox)工具差别如此之大，这也是我说它可以奇迹般运行的原因了
